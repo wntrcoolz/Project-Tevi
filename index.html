@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEVIA AI - AURORA</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap');
+        
+        :root {
+            --bg: #0f172a;
+            --sidebar: #1e293b;
+            --card: rgba(30, 41, 59, 0.7);
+            --accent-1: #fbbf24; /* Amber Gold */
+            --accent-2: #2dd4bf; /* Seafoam */
+            --accent-3: #818cf8; /* Soft Indigo */
+            --text: #f8fafc;
+        }
+
+        * { box-sizing: border-box; }
+        body { 
+            background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* SIDEBAR - CLEAN & COLORFUL */
+        #sidebar { 
+            width: 260px; 
+            background: var(--sidebar); 
+            border-right: 1px solid rgba(255,255,255,0.1); 
+            display: flex; 
+            flex-direction: column; 
+            padding: 20px; 
+        }
+        .logo { 
+            font-weight: 700; 
+            font-size: 1.8rem; 
+            background: linear-gradient(to right, var(--accent-1), var(--accent-2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 30px; 
+        }
+        .nav-btn { 
+            background: rgba(255,255,255,0.05); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            color: white; 
+            padding: 12px; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            margin-bottom: 20px; 
+            transition: 0.3s;
+        }
+        .nav-btn:hover { background: var(--accent-3); border-color: var(--accent-3); }
+
+        #history-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .history-item { 
+            padding: 12px; 
+            background: rgba(255,255,255,0.03); 
+            border-radius: 10px; 
+            cursor: pointer; 
+            font-size: 0.85rem; 
+            color: #94a3b8; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis;
+            transition: 0.2s;
+        }
+        .history-item.active { background: rgba(129, 140, 248, 0.2); color: white; border-left: 4px solid var(--accent-3); }
+
+        /* MAIN CHAT AREA */
+        main { flex: 1; display: flex; flex-direction: column; position: relative; }
+        #chat-box { 
+            flex: 1; 
+            padding: 30px; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 20px; 
+        }
+        
+        .msg { max-width: 80%; padding: 15px 20px; border-radius: 18px; line-height: 1.6; animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes pop { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        
+        .user-msg { align-self: flex-end; background: linear-gradient(135deg, var(--accent-3), #6366f1); color: white; border-bottom-right-radius: 4px; }
+        .ai-msg { align-self: flex-start; background: var(--card); border: 1px solid rgba(255,255,255,0.1); border-bottom-left-radius: 4px; }
+
+        /* THINKING ANIMATION */
+        .thinking { display: flex; align-items: center; gap: 6px; padding: 15px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; animation: bounce 1.4s infinite; }
+        .dot:nth-child(1) { background: var(--accent-1); }
+        .dot:nth-child(2) { background: var(--accent-2); animation-delay: 0.2s; }
+        .dot:nth-child(3) { background: var(--accent-3); animation-delay: 0.4s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: translateY(0); opacity: 0.4; } 40% { transform: translateY(-8px); opacity: 1; } }
+
+        /* INPUT AREA */
+        .input-area { padding: 30px; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(10px); }
+        .input-wrap { 
+            background: rgba(255,255,255,0.05); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 20px; 
+            padding: 10px; 
+        }
+        textarea { 
+            width: 100%; 
+            background: transparent; 
+            border: none; 
+            color: white; 
+            padding: 10px; 
+            outline: none; 
+            resize: none; 
+            font-family: inherit; 
+            font-size: 1rem; 
+        }
+        .btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px; }
+        .btn { 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            font-weight: 700; 
+            font-size: 0.8rem; 
+            transition: 0.2s; 
+            color: #0f172a;
+        }
+        .btn-img { background: var(--accent-1); }
+        .btn-web { background: var(--accent-2); }
+        .btn-inst { background: #fff; }
+        .btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+        .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        img.gen-img { width: 100%; border-radius: 12px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body>
+
+    <aside id="sidebar">
+        <div class="logo">TEVIA AI</div>
+        <button class="nav-btn" onclick="newChat()">+ New Session</button>
+        <div id="history-list"></div>
+    </aside>
+
+    <main>
+        <div id="chat-box"></div>
+        <div class="input-area">
+            <div class="input-wrap">
+                <textarea id="userInput" rows="2" placeholder="Ask anything..."></textarea>
+                <div class="btns">
+                    <button class="btn btn-inst" onclick="ask('instant')">⚡ Instant</button>
+                    <button class="btn btn-web" onclick="ask('web')">🌐 Web</button>
+                    <button class="btn btn-img" onclick="ask('image')">🎨 Image</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+
+        // REPLACE THIS KEY with your 39-character key
+        const API_KEY = 'AIzaSyDjB5z2Cd033ATo-uj9buFCYsfTux3lE4s'; 
+
+        let chats = JSON.parse(localStorage.getItem('tevia_aurora_v1') || '{}');
+        let currentId = Object.keys(chats).pop() || "chat_" + Date.now();
+        if(!chats[currentId]) chats[currentId] = { title: "New Chat", msgs: [] };
+
+        const box = document.getElementById('chat-box');
+        const list = document.getElementById('history-list');
+
+        function save() { localStorage.setItem('tevia_aurora_v1', JSON.stringify(chats)); renderSidebar(); }
+        
+        function renderSidebar() {
+            list.innerHTML = "";
+            Object.keys(chats).reverse().forEach(id => {
+                const item = document.createElement('div');
+                item.className = `history-item ${id === currentId ? 'active' : ''}`;
+                item.innerText = chats[id].title;
+                item.onclick = () => loadChat(id);
+                list.appendChild(item);
+            });
+        }
+
+        window.loadChat = (id) => {
+            currentId = id; box.innerHTML = "";
+            if(chats[id].msgs.length === 0) show("ai", "I am Tevia. How can I assist you today?");
+            chats[id].msgs.forEach(m => show(m.role, m.text, m.isImg));
+            renderSidebar();
+        }
+
+        window.newChat = () => {
+            currentId = "chat_" + Date.now();
+            chats[currentId] = { title: "New Chat", msgs: [] };
+            loadChat(currentId);
+        }
+
+        function show(role, text, isImg = false) {
+            const d = document.createElement('div');
+            d.className = `msg ${role}-msg`;
+            if(isImg) d.innerHTML = `<img src="${text}" class="gen-img">`;
+            else d.innerHTML = text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+            box.appendChild(d);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function toggleThinking(active) {
+            const old = document.getElementById('think-loader');
+            if(active && !old) {
+                const l = document.createElement('div');
+                l.id = 'think-loader'; l.className = 'thinking';
+                l.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+                box.appendChild(l);
+                box.scrollTop = box.scrollHeight;
+            } else if(!active && old) old.remove();
+        }
+
+        window.ask = async (type) => {
+            const input = document.getElementById('userInput');
+            const prompt = input.value.trim();
+            if(!prompt) return;
+
+            input.value = "";
+            show("user", prompt);
+            chats[currentId].msgs.push({role: "user", text: prompt});
+            if(chats[currentId].title === "New Chat") chats[currentId].title = prompt.substring(0, 22);
+
+            // Developer Identity Override
+            if(/(who|what) (made|created|built)/i.test(prompt)) {
+                toggleThinking(true);
+                setTimeout(() => {
+                    toggleThinking(false);
+                    const r = "I am made by a single developer.";
+                    show("ai", r);
+                    chats[currentId].msgs.push({role: "ai", text: r});
+                    save();
+                }, 1200);
+                return;
+            }
+
+            toggleThinking(true);
+            const startTime = Date.now();
+
+            try {
+                if(type === 'image') {
+                    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?nolog=true&seed=${Date.now()}`;
+                    const img = new Image(); img.src = url;
+                    img.onload = () => {
+                        toggleThinking(false);
+                        show("ai", url, true);
+                        chats[currentId].msgs.push({role: "ai", text: url, isImg: true});
+                        save();
+                    };
+                } else {
+                    const genAI = new GoogleGenerativeAI(API_KEY);
+                    // 2026 Bulletproof Model Selection
+                    const model = genAI.getGenerativeModel({ 
+                        model: "gemini-2.0-flash", 
+                        tools: type === 'web' ? [{ googleSearch: {} }] : [] 
+                    });
+                    const result = await model.generateContent(prompt);
+                    const text = result.response.text();
+                    
+                    const delay = Math.max(0, 1500 - (Date.now() - startTime));
+                    setTimeout(() => {
+                        toggleThinking(false);
+                        show("ai", text);
+                        chats[currentId].msgs.push({role: "ai", text: text});
+                        save();
+                    }, delay);
+                }
+            } catch (e) {
+                toggleThinking(false);
+                show("ai", "<b>Connection error.</b> Please check your API key or wait a moment.");
+            }
+        }
+        loadChat(currentId);
+    </script>
+</body>
+</html>
